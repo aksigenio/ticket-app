@@ -106,7 +106,7 @@ input[type=file]{margin-top:8px}
       <label>Имя<input type="text" id="name" required></label>
       <label>Фамилия<input type="text" id="surname"></label>
       <label>Email<input type="email" id="email" required></label>
-      <label>Подтверждение оплаты*<input type="file" id="receipt" required></label>
+      <label>Подтверждение оплаты*<input type="file" id="receipt" name="receipt" required></label>
 
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
         <button type="button" class="btn grey" id="cancelBtn">Отмена</button>
@@ -228,6 +228,7 @@ setInterval(fetchSeats,15000);
 </script>
 </body>
 </html>
+
 
 
 
