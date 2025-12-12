@@ -79,16 +79,47 @@ const rowVGap = 4.5;         // вертикальный шаг между ря�
 const seatW = 3.5;           // ширина места (%)
 const seatH = 3.5;           // высота (%)
 
-/* Авто-генерация SEATS_CONFIG (id,left,top,w,h) */
-const SEATS_CONFIG = [];
+/* Авто-генерация SEATS_CONFIG (id,left,top,w,h)
+   Логика: для каждого ряда считаем горизонтальный шаг так, чтобы
+   правые (последние) места всех рядов были на одной вертикальной линии
+   (т.е. правый край последнего кресла= hallPaddingLeft + availableWidth).
+   Нумерация идёт слева направо в каждом ряду.
+*/
+const SEATS_CONFIG = (function(){
+  const arr = [];
+  const availableWidth = 100 - hallPaddingLeft - hallPaddingRight;
+  let id = 1;
+  for (let r = 0; r < rowsCounts.length; r++) {
+    const n = rowsCounts[r];
+    const top = parseFloat((topStart + r * rowVGap).toFixed(3));
+    const lastLeft = hallPaddingLeft + availableWidth - seatW; // позиция левого края последнего кресла
+    if (n === 1) {
+      // одиночное место — ставим его правее (вровень по правому краю)
+      arr.push({ id: String(id++), left: parseFloat(lastLeft.toFixed(3)), top: top, w: seatW, h: seatH });
+    } else {
+      // высчитываем промежуток g между креслами
+      // seatW + g = (availableWidth - seatW) / (n-1)
+      // => g = (availableWidth - seatW) / (n-1) - seatW
+      const g = (availableWidth - seatW) / (n - 1) - seatW;
+      // размещаем слева направо, начиная от hallPaddingLeft
+      for (let k = 0; k < n; k++) {
+        const left = hallPaddingLeft + k * (seatW + g);
+        arr.push({ id: String(id++), left: parseFloat(left.toFixed(3)), top: top, w: seatW, h: seatH });
+      }
+    }
+  }
+  return arr;
+})();
 
 let seatsState = {}; // id -> status
 
 async function fetchSeats() {
   try {
+    // получаем статусы с Google Apps Script (если настроено)
     const res = await fetch(API_URL + '?type=getSeats');
     const j = await res.json();
     if (!j.ok) { console.error('getSeats error', j); return; }
+    // j.seats ожидается как массив {id, status}
     j.seats.forEach(s => seatsState[s.id] = s.status);
     renderSeats();
   } catch (e) { console.error('fetchSeats err', e); }
@@ -102,7 +133,9 @@ function renderSeats() {
     const el = document.createElement('div');
     el.className = 'seat';
     const status = seatsState[cfg.id] || 'available';
-    el.classList.add(status === 'pending' ? 'pending' : (status === 'sold' ? 'sold' : 'available'));
+    if (status === 'pending') el.classList.add('pending');
+    else if (status === 'sold') el.classList.add('sold');
+    else el.classList.add('available');
     el.style.left = cfg.left + '%';
     el.style.top = cfg.top + '%';
     el.style.width = cfg.w + '%';
@@ -162,7 +195,15 @@ buyForm.addEventListener('submit', async (e) => {
 function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
 
 /* initial load */
-window.addEventListener('load', ()=>{ fetchSeats(); setInterval(fetchSeats, 15000); });
+// если у тебя нет настроенного API пока — можно временно закомментировать fetchSeats() и вызвать renderSeats() прямо.
+// сейчас мы пытаемся загрузить статусы с API и перерисовать.
+window.addEventListener('load', ()=>{
+  // если API_URL корректен и отвечает, fetchSeats() заполнит seatsState и вызовет renderSeats()
+  // иначе — если fetchSeats упадёт, можно принудительно отрисовать базовую конфигурацию:
+  fetchSeats().catch(()=>{ renderSeats(); });
+  // также обновляем статусы периодически:
+  setInterval(()=>{ fetchSeats().catch(()=>{}); }, 15000);
+});
 </script>
 </body>
 </html>
