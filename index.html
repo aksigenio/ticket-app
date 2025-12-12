@@ -1,199 +1,234 @@
 <!doctype html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Купить билет</title>
+
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;margin:12px;background:#fafafa}
-  h2{margin:6px 0 12px}
-  .legend{display:flex;gap:12px;margin-bottom:10px;align-items:center}
-  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:0.95rem}
-  .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
-  .hall{position:relative;max-width:980px;margin:10px auto;height:1400px;background:#fff;border:1px solid #eee;box-shadow:0 6px 18px rgba(0,0,0,0.04)}
-  .stage{position:absolute; left:8%; right:8%; top:4%; height:16%; background:#e8e0cb; display:flex;align-items:center;justify-content:center; font-weight:700; color:#333; border-radius:4px}
-  .seat{position:absolute;border-radius:6px; display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,0.08);border:2px solid rgba(255,255,255,0.6)}
-  .available{background:rgba(0,160,0,0.9)}
-  .pending{background:rgba(240,160,0,0.95)}
-  .sold{background:rgba(200,0,0,0.95);cursor:default;opacity:0.85}
-  .seat:hover{transform:scale(1.06)}
-  .modal{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:9999}
-  .modal.open{display:flex}
-  .card{background:#fff;padding:14px;border-radius:8px;width:90%;max-width:420px;box-shadow:0 6px 24px rgba(0,0,0,0.2)}
-  input[type=text], input[type=email]{width:100%;padding:8px;margin-top:6px;box-sizing:border-box}
-  input[type=file]{margin-top:8px}
-  .btn{padding:8px 12px;border-radius:6px;border:none;background:#1e73be;color:#fff;cursor:pointer}
-  .btn.grey{background:#777}
-  #formMsg{margin-top:8px;font-size:0.95rem}
-  .topbar{max-width:980px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center}
-  @media (max-width:600px){ .seat{font-size:0.6rem} }
+body{font-family:Arial,Helvetica,sans-serif;margin:12px;background:#fafafa}
+h2{margin:6px 0 12px}
+
+.topbar{max-width:980px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center}
+.legend{display:flex;gap:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:0.9rem}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+
+.hall{
+  position:relative;
+  max-width:980px;
+  margin:10px auto;
+  height:1400px;
+  background:#fff;
+  border:1px solid #eee;
+  box-shadow:0 6px 18px rgba(0,0,0,.05)
+}
+
+.stage{
+  position:absolute;
+  left:8%; right:8%; top:4%;
+  height:16%;
+  background:#e8e0cb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  border-radius:4px
+}
+
+.seat{
+  position:absolute;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.7rem;
+  color:#fff;
+  cursor:pointer;
+  border:2px solid rgba(255,255,255,.6)
+}
+
+.available{background:rgba(0,160,0,.9)}
+.pending{background:rgba(240,160,0,.95)}
+.sold{background:rgba(200,0,0,.95);cursor:default;opacity:.85}
+.seat:hover{transform:scale(1.06)}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999
+}
+.modal.open{display:flex}
+
+.card{
+  background:#fff;
+  padding:14px;
+  border-radius:8px;
+  width:90%;
+  max-width:420px;
+  box-shadow:0 6px 24px rgba(0,0,0,.2)
+}
+
+input[type=text],input[type=email]{width:100%;padding:8px;margin-top:6px}
+input[type=file]{margin-top:8px}
+
+.btn{padding:8px 12px;border-radius:6px;border:none;background:#1e73be;color:#fff;cursor:pointer}
+.btn.grey{background:#777}
+#formMsg{margin-top:8px}
 </style>
 </head>
+
 <body>
-  <div class="topbar">
-    <h2>Купить билет</h2>
-    <div class="legend">
-      <span><i class="sw" style="background:rgba(0,160,0,0.9)"></i> available</span>
-      <span><i class="sw" style="background:rgba(240,160,0,0.95)"></i> pending</span>
-      <span><i class="sw" style="background:rgba(200,0,0,0.95)"></i> sold</span>
-    </div>
-  </div>
 
-  <div class="hall" id="hall">
-    <div class="stage">PALCO / Сцена</div>
-    <!-- seats will be added here -->
+<div class="topbar">
+  <h2>Купить билет</h2>
+  <div class="legend">
+    <span><i class="sw" style="background:rgba(0,160,0,.9)"></i> available</span>
+    <span><i class="sw" style="background:rgba(240,160,0,.95)"></i> pending</span>
+    <span><i class="sw" style="background:rgba(200,0,0,.95)"></i> sold</span>
   </div>
+</div>
 
-  <!-- Modal -->
-  <div id="modal" class="modal">
-    <div class="card">
-      <h3 id="modalTitle">Заказать место</h3>
-      <form id="buyForm">
-        <input type="hidden" id="seatId" />
-        <label>Имя<input type="text" id="name" required></label>
-        <label>Фамилия<input type="text" id="surname"></label>
-        <label>Email<input type="email" id="email" required></label>
-        <label>Подтверждение оплаты (скрин/файл)*<input type="file" id="receipt" accept="image/*,application/pdf" required></label>
-        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
-          <button id="cancelBtn" class="btn grey" type="button">Отмена</button>
-          <button class="btn" type="submit">Отправить</button>
-        </div>
-        <div id="formMsg"></div>
-      </form>
-    </div>
+<div class="hall" id="hall">
+  <div class="stage">PALCO / Сцена</div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+  <div class="card">
+    <h3 id="modalTitle"></h3>
+    <form id="buyForm">
+      <input type="hidden" id="seatId">
+      <label>Имя<input type="text" id="name" required></label>
+      <label>Фамилия<input type="text" id="surname"></label>
+      <label>Email<input type="email" id="email" required></label>
+      <label>Подтверждение оплаты*<input type="file" id="receipt" required></label>
+
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" class="btn grey" id="cancelBtn">Отмена</button>
+        <button class="btn" type="submit">Отправить</button>
+      </div>
+      <div id="formMsg"></div>
+    </form>
   </div>
+</div>
 
 <script>
-/* ---------- ВСТАВЬ СЮДА ТВОЙ API URL ------------- */
-const API_URL = 'https://script.google.com/macros/s/AKfycbzA-LkdVYOtD9z1-oV5y_tLbQzCVByzN-Ku9r8t9BsaGMZGjTfEv8MPbAeM3JIqxNw0Yg/exec'; // <-- ВСТАВЬ Web app URL
+/* 🔗 API URL (ТОЛЬКО с /exec) */
+const API_URL = 'https://script.google.com/macros/s/AKfycbwD3RF7SgQFXCnxjwIfqYU_rvC5yQ4cdDHyyVDV1KgQ3Ijpu3EUzXRwA8Rzr2PTtZ1wVw/exec';
 
-/* ---------- СХЕМА РЯДОВ (сумма = 172) -----------
-   rowsCounts — массив: кол-во кресел в каждом ряду, сверху вниз */
-const rowsCounts = [16,17,16,15,14,14,14,13,10,11,10,9,7,6]; // total 172
+/* 🎟 схема рядов */
+const rowsCounts = [16,17,16,15,14,14,14,13,10,11,10,9,7,6];
 
-/* Параметры размещения (проценты) */
-const hallPaddingLeft = 6;   // % слева рамки
-const hallPaddingRight = 6;  // % справа рамки
-const topStart = 22;         // % от верхней границы блока hall, где начинаются ряды
-const rowVGap = 4.5;         // вертикальный шаг между рядами (%)
-const seatW = 3.5;           // ширина места (%)
-const seatH = 3.5;           // высота (%)
+/* 📐 параметры */
+const hallPaddingLeft = 6;
+const hallPaddingRight = 6;
+const topStart = 22;
+const rowVGap = 4.5;
+const seatW = 3.5;
+const seatH = 3.5;
 
-/* Авто-генерация SEATS_CONFIG (выравнивание по колонкам справа) */
-const SEATS_CONFIG = (function(){
+/* 🧮 генерация мест (выравнивание по правым колонкам) */
+const SEATS_CONFIG = (() => {
   const arr = [];
-  const availableWidth = 100 - hallPaddingLeft - hallPaddingRight; // пространство для мест
-  // максимальное число колонок (по правому выравниванию)
+  const availableWidth = 100 - hallPaddingLeft - hallPaddingRight;
   const maxCols = Math.max(...rowsCounts);
-  // lastLeft = позиция (в процентах) левого края правой (последней) колонки
   const lastLeft = hallPaddingLeft + availableWidth - seatW;
-  // вычисляем равный горизонтальный зазор между колонками (colGap)
-  // условие: (maxCols-1)*(seatW + colGap) = availableWidth - seatW
-  // => colGap = (availableWidth - seatW)/(maxCols-1) - seatW
-  const colGap = maxCols > 1 ? ( (availableWidth - seatW) / (maxCols - 1) - seatW ) : 0;
+  const colGap = maxCols > 1
+    ? (availableWidth - seatW) / (maxCols - 1) - seatW
+    : 0;
 
   let id = 1;
-  for (let r = 0; r < rowsCounts.length; r++) {
-    const n = rowsCounts[r];
-    const top = parseFloat((topStart + r * rowVGap).toFixed(3));
-    // начальная (левая) позиция для этого ряда:
-    // т.к. ряд занимает n колонок справа, старт = lastLeft - (n-1)*(seatW + colGap)
-    const startLeft = parseFloat(( lastLeft - (n - 1) * (seatW + colGap) ).toFixed(3));
-    for (let j = 0; j < n; j++) {
-      const left = parseFloat(( startLeft + j * (seatW + colGap) ).toFixed(3));
-      arr.push({ id: String(id++), left: left, top: top, w: seatW, h: seatH });
+  rowsCounts.forEach((count, r) => {
+    const top = topStart + r * rowVGap;
+    const startLeft = lastLeft - (count - 1) * (seatW + colGap);
+    for (let i = 0; i < count; i++) {
+      arr.push({ id:String(id++), left:startLeft+i*(seatW+colGap), top, w:seatW, h:seatH });
     }
-  }
+  });
   return arr;
 })();
 
-let seatsState = {}; // id -> status
+let seatsState = {};
 
-async function fetchSeats() {
-  try {
-    const res = await fetch(API_URL + '?type=getSeats');
-    const j = await res.json();
-    if (!j.ok) { console.error('getSeats error', j); return; }
+async function fetchSeats(){
+  try{
+    const r = await fetch(API_URL + '?type=getSeats');
+    const j = await r.json();
+    seatsState = {};
     j.seats.forEach(s => seatsState[s.id] = s.status);
-    renderSeats();
-  } catch (e) { console.error('fetchSeats err', e); /* если API недоступен, всё равно рендерим базовую схему */ renderSeats(); }
+  }catch(e){}
+  renderSeats();
 }
 
-function renderSeats() {
+function renderSeats(){
   const hall = document.getElementById('hall');
-  hall.querySelectorAll('.seat').forEach(n => n.remove());
-  SEATS_CONFIG.forEach(cfg => {
-    const el = document.createElement('div');
-    el.className = 'seat';
-    const status = seatsState[cfg.id] || 'available';
-    if (status === 'pending') el.classList.add('pending');
-    else if (status === 'sold') el.classList.add('sold');
-    else el.classList.add('available');
-    el.style.left = cfg.left + '%';
-    el.style.top = cfg.top + '%';
-    el.style.width = cfg.w + '%';
-    el.style.height = cfg.h + '%';
-    el.dataset.id = cfg.id;
-    el.innerText = cfg.id;
-    if (status !== 'sold') el.addEventListener('click', onSeatClick);
+  hall.querySelectorAll('.seat').forEach(s=>s.remove());
+  SEATS_CONFIG.forEach(s=>{
+    const el=document.createElement('div');
+    el.className='seat ' + (seatsState[s.id]||'available');
+    el.style.left=s.left+'%';
+    el.style.top=s.top+'%';
+    el.style.width=s.w+'%';
+    el.style.height=s.h+'%';
+    el.textContent=s.id;
+    el.dataset.id=s.id;
+    if(seatsState[s.id]!=='sold') el.onclick=()=>openModal(s.id);
     hall.appendChild(el);
   });
 }
 
-function onSeatClick(e) {
-  const id = e.currentTarget.dataset.id;
-  openModal(id);
-}
+/* modal */
+const modal=document.getElementById('modal');
+const seatIdInput=document.getElementById('seatId');
+const modalTitle=document.getElementById('modalTitle');
+const formMsg=document.getElementById('formMsg');
 
-/* Modal logic */
-const modal = document.getElementById('modal');
-const buyForm = document.getElementById('buyForm');
-const seatIdInput = document.getElementById('seatId');
-const modalTitle = document.getElementById('modalTitle');
-const cancelBtn = document.getElementById('cancelBtn');
-const formMsg = document.getElementById('formMsg');
-
-function openModal(id) {
-  seatIdInput.value = id;
-  modalTitle.innerText = 'Выбрано место ' + id;
-  formMsg.innerText = '';
+function openModal(id){
+  seatIdInput.value=id;
+  modalTitle.textContent='Выбрано место '+id;
   modal.classList.add('open');
 }
-function closeModal() { modal.classList.remove('open'); }
-cancelBtn.addEventListener('click', ()=>closeModal());
+document.getElementById('cancelBtn').onclick=()=>modal.classList.remove('open');
 
-buyForm.addEventListener('submit', async (e) => {
+/* ✅ ПРАВИЛЬНАЯ отправка */
+document.getElementById('buyForm').onsubmit = async e => {
   e.preventDefault();
-  formMsg.innerText = 'Отправка...';
-  const id = seatIdInput.value;
-  const name = document.getElementById('name').value.trim();
-  const surname = document.getElementById('surname').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const fileInput = document.getElementById('receipt');
-  if (!name || !email || !fileInput.files.length) { formMsg.innerText = 'Заполните обязательные поля.'; return; }
-  const file = fileInput.files[0];
-  try {
-    const base64 = await readFileAsDataURL(file);
-    const payload = { type:'reserve', id: id, name: name, surname: surname, email: email, receiptBase64: base64, receiptFilename: file.name };
-    const r = await fetch(API_URL, { method:'POST', body: JSON.stringify(payload), headers:{ 'Content-Type':'application/json' }});
+  formMsg.textContent='Отправка…';
+
+  const fd = new FormData();
+  fd.append('type','reserve');
+  fd.append('id',seatIdInput.value);
+  fd.append('name',name.value);
+  fd.append('surname',surname.value);
+  fd.append('email',email.value);
+  fd.append('receipt',receipt.files[0]);
+
+  try{
+    const r = await fetch(API_URL,{method:'POST',body:fd});
     const j = await r.json();
-    if (j.ok) {
-      formMsg.innerText = 'Резерв создан — ожидает подтверждения админом.';
-      await fetchSeats();
-      setTimeout(()=>closeModal(),1000);
-    } else formMsg.innerText = 'Ошибка: ' + (j.error||'unknown');
-  } catch(err){ formMsg.innerText = 'Ошибка сети: ' + err; }
-});
+    if(j.ok){
+      formMsg.textContent='Резерв принят';
+      fetchSeats();
+      setTimeout(()=>modal.classList.remove('open'),800);
+    }else{
+      formMsg.textContent='Ошибка: '+j.error;
+    }
+  }catch{
+    formMsg.textContent='Ошибка сети';
+  }
+};
 
-function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
-
-window.addEventListener('load', ()=>{
-  fetchSeats().catch(()=>{ renderSeats(); });
-  setInterval(()=>{ fetchSeats().catch(()=>{}); }, 15000);
-});
+fetchSeats();
+setInterval(fetchSeats,15000);
 </script>
 </body>
 </html>
+
 
 
 
