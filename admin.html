@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Panel</title>
+<style>body{font-family:Arial;padding:12px} input{width:60%} button{padding:6px 10px;margin-left:6px}</style>
+</head><body>
+<h3>Админ — Pending</h3>
+API: <input id="api" value="PASTE_YOUR_WEB_APP_URL_HERE"><br>
+Admin token: <input id="token" value="PASTE_ADMIN_TOKEN_HERE"><br>
+<button id="refresh">Обновить pending</button>
+<div id="list" style="margin-top:10px"></div>
+
+<script>
+document.getElementById('refresh').addEventListener('click', async ()=>{
+  const API = document.getElementById('api').value.trim();
+  const token = document.getElementById('token').value.trim();
+  if(!API || !token){ alert('Вставьте API и admin token'); return;}
+  const res = await fetch(API + '?type=getSeats'); const j = await res.json();
+  if(!j.ok){ alert('Ошибка getSeats'); return;}
+  const pending = j.seats.filter(s=>s.status==='pending');
+  const list = document.getElementById('list'); list.innerHTML='';
+  if(!pending.length) list.innerHTML = '<i>Нет заявок pending</i>';
+  pending.forEach(p=>{
+    const div = document.createElement('div');
+    div.style.margin='6px 0';
+    div.innerHTML = 'ID:'+p.id+' | candidate:'+ (p.candidateName||'') + ' | <button data-id="'+p.id+'" class="conf">Confirm</button> <button data-id="'+p.id+'" class="rel">Release</button>';
+    list.appendChild(div);
+  });
+  document.querySelectorAll('.conf').forEach(b=>b.addEventListener('click', async (e)=>{
+    const id = e.currentTarget.dataset.id;
+    await fetch(API, {method:'POST', body: JSON.stringify({ type:'adminAction', adminToken: token, action:'confirm', id: id }), headers:{'Content-Type':'application/json'}});
+    alert('Confirmed '+id); document.getElementById('refresh').click();
+  }));
+  document.querySelectorAll('.rel').forEach(b=>b.addEventListener('click', async (e)=>{
+    const id = e.currentTarget.dataset.id;
+    await fetch(API, {method:'POST', body: JSON.stringify({ type:'adminAction', adminToken: token, action:'release', id: id }), headers:{'Content-Type':'application/json'}});
+    alert('Released '+id); document.getElementById('refresh').click();
+  }));
+});
+</script>
+</body></html>

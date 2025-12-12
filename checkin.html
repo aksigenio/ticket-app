@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Сканер билетов</title>
+<style>body{font-family:Arial;padding:12px}#video{width:100%;max-width:600px;border:1px solid #ddd} .btn{padding:8px 12px;background:#1e73be;color:#fff;border:none;border-radius:6px}</style>
+</head><body>
+<h3>Сканер билетов</h3>
+<video id="video" autoplay muted playsinline></video>
+<div style="margin-top:8px">
+  <input id="manualToken" placeholder="Вставьте токен вручную" style="width:68%" />
+  <button id="checkBtn" class="btn">Проверить</button>
+</div>
+<div id="result" style="margin-top:8px;padding:8px;border-radius:6px;background:#f6f6f6"></div>
+
+<script>
+const API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE'; // <-- вставь сюда
+let video = document.getElementById('video');
+let resultDiv = document.getElementById('result');
+
+async function initCamera() {
+  if ('BarcodeDetector' in window) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = stream; video.play();
+      const detector = new BarcodeDetector({formats:['qr_code']});
+      scanLoop(detector);
+    } catch(e) { resultDiv.innerText = 'Камера недоступна: ' + e; video.style.display='none'; }
+  } else { resultDiv.innerText = 'Ваш браузер не поддерживает BarcodeDetector. Вставьте токен вручную.'; video.style.display='none'; }
+}
+async function scanLoop(detector) {
+  try {
+    const bitmap = await createImageBitmap(video);
+    const detections = await detector.detect(bitmap);
+    if (detections && detections.length) { await handleToken(detections[0].rawValue); await new Promise(r=>setTimeout(r,1400)); }
+  } catch(e){}
+  requestAnimationFrame(()=>scanLoop(detector));
+}
+document.getElementById('checkBtn').addEventListener('click', async ()=>{ const t=document.getElementById('manualToken').value.trim(); if(!t){ resultDiv.innerText='Введите токен'; return;} await handleToken(t); });
+async function handleToken(token){
+  resultDiv.innerText = 'Проверка...';
+  try{
+    const res = await fetch(API_URL, { method:'POST', body: JSON.stringify({ type:'checkin', token: token }), headers:{'Content-Type':'application/json'} });
+    const j = await res.json();
+    if (j.ok) resultDiv.innerHTML = '<strong style="color:green">Успех — билет действителен. Место: ' + j.seatId + '</strong>';
+    else resultDiv.innerHTML = '<strong style="color:red">Ошибка: ' + (j.error||'unknown') + '</strong>';
+  } catch(e){ resultDiv.innerText = 'Ошибка сети: ' + e; }
+}
+initCamera();
+</script>
+</body></html>
