@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Купить билет</title>
 
 <style>
@@ -11,7 +11,7 @@ h2{margin:6px 0 12px}
 
 .topbar{max-width:980px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center}
 .legend{display:flex;gap:12px}
-.legend span{display:inline-flex;align-items:center;gap:6px;font-size:0.9rem}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:.9rem}
 .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
 
 .hall{
@@ -47,7 +47,6 @@ h2{margin:6px 0 12px}
   cursor:pointer;
   border:2px solid rgba(255,255,255,.6)
 }
-
 .available{background:rgba(0,160,0,.9)}
 .pending{background:rgba(240,160,0,.95)}
 .sold{background:rgba(200,0,0,.95);cursor:default;opacity:.85}
@@ -87,9 +86,9 @@ input[type=file]{margin-top:8px}
 <div class="topbar">
   <h2>Купить билет</h2>
   <div class="legend">
-    <span><i class="sw" style="background:rgba(0,160,0,.9)"></i> available</span>
-    <span><i class="sw" style="background:rgba(240,160,0,.95)"></i> pending</span>
-    <span><i class="sw" style="background:rgba(200,0,0,.95)"></i> sold</span>
+    <span><i class="sw" style="background:#00a000"></i> available</span>
+    <span><i class="sw" style="background:#f0a000"></i> pending</span>
+    <span><i class="sw" style="background:#c00000"></i> sold</span>
   </div>
 </div>
 
@@ -103,23 +102,36 @@ input[type=file]{margin-top:8px}
     <h3 id="modalTitle"></h3>
     <form id="buyForm">
       <input type="hidden" id="seatId">
-      <label>Имя<input type="text" id="name" required></label>
-      <label>Фамилия<input type="text" id="surname"></label>
-      <label>Email<input type="email" id="email" required></label>
-      <label>Подтверждение оплаты*<input type="file" id="receipt" name="receipt" required></label>
+
+      <label>Имя
+        <input type="text" id="name" required>
+      </label>
+
+      <label>Фамилия
+        <input type="text" id="surname">
+      </label>
+
+      <label>Email
+        <input type="email" id="email" required>
+      </label>
+
+      <label>Подтверждение оплаты
+        <input type="file" id="receipt" name="receipt" required>
+      </label>
 
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
         <button type="button" class="btn grey" id="cancelBtn">Отмена</button>
-        <button class="btn" type="submit">Отправить</button>
+        <button type="submit" class="btn">Отправить</button>
       </div>
+
       <div id="formMsg"></div>
     </form>
   </div>
 </div>
 
 <script>
-/* 🔗 API URL (ТОЛЬКО с /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbyFoobu9vzTK7YLGYGRvzabYfLLGsHWH6n8OQVku3roAedgtP8q64x4JuHKRRuSZXmauQ/exec';
+/* 🔗 ВАЖНО: только /exec */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxghG_LzaO6pSTNEfj-x1U5pu8l3Izbo8oGNYcDqMuFVQ-dAX8UkXW4E56Ef6N6-WgRfA/exec';
 
 /* 🎟 схема рядов */
 const rowsCounts = [16,17,16,15,14,14,14,13,10,11,10,9,7,6];
@@ -132,22 +144,20 @@ const rowVGap = 4.5;
 const seatW = 3.5;
 const seatH = 3.5;
 
-/* 🧮 генерация мест (выравнивание по правым колонкам) */
+/* 🧮 генерация мест (выравнивание справа) */
 const SEATS_CONFIG = (() => {
   const arr = [];
-  const availableWidth = 100 - hallPaddingLeft - hallPaddingRight;
+  const width = 100 - hallPaddingLeft - hallPaddingRight;
   const maxCols = Math.max(...rowsCounts);
-  const lastLeft = hallPaddingLeft + availableWidth - seatW;
-  const colGap = maxCols > 1
-    ? (availableWidth - seatW) / (maxCols - 1) - seatW
-    : 0;
+  const lastLeft = hallPaddingLeft + width - seatW;
+  const colGap = maxCols > 1 ? (width - seatW) / (maxCols - 1) - seatW : 0;
 
   let id = 1;
   rowsCounts.forEach((count, r) => {
     const top = topStart + r * rowVGap;
     const startLeft = lastLeft - (count - 1) * (seatW + colGap);
     for (let i = 0; i < count; i++) {
-      arr.push({ id:String(id++), left:startLeft+i*(seatW+colGap), top, w:seatW, h:seatH });
+      arr.push({ id:String(id++), left:startLeft + i*(seatW+colGap), top });
     }
   });
   return arr;
@@ -155,9 +165,10 @@ const SEATS_CONFIG = (() => {
 
 let seatsState = {};
 
+/* ===== ЗАГРУЗКА МЕСТ ===== */
 async function fetchSeats(){
   try{
-    const r = await fetch(API_URL + '?type=getSeats');
+    const r = await fetch(API_URL);
     const j = await r.json();
     seatsState = {};
     j.seats.forEach(s => seatsState[s.id] = s.status);
@@ -167,38 +178,41 @@ async function fetchSeats(){
 
 function renderSeats(){
   const hall = document.getElementById('hall');
-  hall.querySelectorAll('.seat').forEach(s=>s.remove());
+  hall.querySelectorAll('.seat').forEach(e=>e.remove());
+
   SEATS_CONFIG.forEach(s=>{
-    const el=document.createElement('div');
-    el.className='seat ' + (seatsState[s.id]||'available');
-    el.style.left=s.left+'%';
-    el.style.top=s.top+'%';
-    el.style.width=s.w+'%';
-    el.style.height=s.h+'%';
-    el.textContent=s.id;
-    el.dataset.id=s.id;
-    if(seatsState[s.id]!=='sold') el.onclick=()=>openModal(s.id);
+    const el = document.createElement('div');
+    el.className = 'seat ' + (seatsState[s.id] || 'available');
+    el.style.left = s.left + '%';
+    el.style.top = s.top + '%';
+    el.style.width = seatW + '%';
+    el.style.height = seatH + '%';
+    el.textContent = s.id;
+
+    if(seatsState[s.id] !== 'sold'){
+      el.onclick = ()=>openModal(s.id);
+    }
     hall.appendChild(el);
   });
 }
 
-/* modal */
-const modal=document.getElementById('modal');
-const seatIdInput=document.getElementById('seatId');
-const modalTitle=document.getElementById('modalTitle');
-const formMsg=document.getElementById('formMsg');
+/* ===== MODAL ===== */
+const modal = document.getElementById('modal');
+const seatIdInput = document.getElementById('seatId');
+const modalTitle = document.getElementById('modalTitle');
+const formMsg = document.getElementById('formMsg');
 
 function openModal(id){
-  seatIdInput.value=id;
-  modalTitle.textContent='Выбрано место '+id;
+  seatIdInput.value = id;
+  modalTitle.textContent = 'Выбрано место ' + id;
   modal.classList.add('open');
 }
-document.getElementById('cancelBtn').onclick=()=>modal.classList.remove('open');
+document.getElementById('cancelBtn').onclick = ()=>modal.classList.remove('open');
 
-/* ✅ ПРАВИЛЬНАЯ отправка */
+/* ===== ОТПРАВКА ===== */
 document.getElementById('buyForm').onsubmit = async e => {
   e.preventDefault();
-  formMsg.textContent='Отправка…';
+  formMsg.textContent = 'Отправка…';
 
   const fd = new FormData();
   fd.append('type','reserve');
@@ -212,22 +226,24 @@ document.getElementById('buyForm').onsubmit = async e => {
     const r = await fetch(API_URL,{method:'POST',body:fd});
     const j = await r.json();
     if(j.ok){
-      formMsg.textContent='Резерв принят';
+      formMsg.textContent = 'Резерв принят';
       fetchSeats();
       setTimeout(()=>modal.classList.remove('open'),800);
     }else{
-      formMsg.textContent='Ошибка: '+j.error;
+      formMsg.textContent = 'Ошибка: ' + j.error;
     }
   }catch{
-    formMsg.textContent='Ошибка сети';
+    formMsg.textContent = 'Ошибка сети';
   }
 };
 
 fetchSeats();
 setInterval(fetchSeats,15000);
 </script>
+
 </body>
 </html>
+
 
 
 
