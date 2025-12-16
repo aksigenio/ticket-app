@@ -220,7 +220,7 @@ document.getElementById('buyForm').onsubmit = e => {
     const fd = new FormData();
     fd.append('type','reserve');
     fd.append('id',seatIdInput.value);
-    fd.append('name',name.value);
+    fd.append('name',document.getElementById('name').value);
     fd.append('surname',surname.value);
     fd.append('email',email.value);
     fd.append('receiptBase64', base64);
@@ -247,6 +247,7 @@ setInterval(fetchSeats,15000);
 
 </body>
 </html>
+
 
 
 
