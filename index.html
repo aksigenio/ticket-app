@@ -186,7 +186,7 @@ function renderSeats(){
     el.style.height = seatH + '%';
     el.textContent = s.id;
 
-    if(seatsState[s.id] !== 'sold'){
+    if((seatsState[s.id] || 'available') === 'available'){
       el.onclick = ()=>openModal(s.id);
     }
     hall.appendChild(el);
@@ -247,6 +247,7 @@ setInterval(fetchSeats,15000);
 
 </body>
 </html>
+
 
 
 
