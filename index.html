@@ -229,7 +229,19 @@ const SEATS_CONFIG = (() => {
         id: String(globalId++),
         row,
         seat: i,
-        isVip: r < 5,
+        isVip: (() => {
+  const vipMap = {
+    A: [4, 13],
+    B: [5, 14],
+    C: [4, 13],
+    D: [3, 12],
+    E: [2, 11],
+  };
+
+  const range = vipMap[row];
+  return range ? (i >= range[0] && i <= range[1]) : false;
+})(),
+
         left: startLeft + (i-1)*(seatW+colGap),
         top
       });
@@ -316,6 +328,7 @@ setInterval(fetchSeats,15000);
 
 </body>
 </html>
+
 
 
 
