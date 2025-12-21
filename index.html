@@ -6,13 +6,47 @@
 <title>Купить билет</title>
 
 <style>
-body{font-family:Arial,Helvetica,sans-serif;margin:12px;background:#fafafa}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  margin:12px;
+  background:#fafafa
+}
 h2{margin:6px 0 12px}
 
-.topbar{max-width:980px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center}
-.legend{display:flex;gap:12px}
-.legend span{display:inline-flex;align-items:center;gap:6px;font-size:.9rem}
-.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+.topbar{
+  max-width:980px;
+  margin:0 auto 8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+
+.legend{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:.9rem
+}
+.sw{
+  width:14px;
+  height:14px;
+  border-radius:3px;
+  display:inline-block
+}
+
+.prices{
+  max-width:980px;
+  margin:10px auto;
+  padding:10px;
+  background:#eef;
+  border-radius:6px;
+  font-size:.95rem
+}
 
 .hall{
   position:relative;
@@ -26,7 +60,9 @@ h2{margin:6px 0 12px}
 
 .stage{
   position:absolute;
-  left:8%; right:8%; top:4%;
+  left:8%;
+  right:8%;
+  top:4%;
   height:16%;
   background:#e8e0cb;
   display:flex;
@@ -47,9 +83,15 @@ h2{margin:6px 0 12px}
   cursor:pointer;
   border:2px solid rgba(255,255,255,.6)
 }
-.available{background:rgba(0,160,0,.9)}
-.pending{background:rgba(240,160,0,.95)}
-.sold{background:rgba(200,0,0,.95);cursor:default;opacity:.85}
+.seat.vip{ background:#1e5eff }
+.seat.regular{ background:#00a000 }
+
+.pending{ background:#f0a000 !important }
+.sold{
+  background:#c00000 !important;
+  cursor:default;
+  opacity:.85
+}
 .seat:hover{transform:scale(1.06)}
 
 .modal{
@@ -72,10 +114,21 @@ h2{margin:6px 0 12px}
   box-shadow:0 6px 24px rgba(0,0,0,.2)
 }
 
-input[type=text],input[type=email]{width:100%;padding:8px;margin-top:6px}
+input[type=text],input[type=email]{
+  width:100%;
+  padding:8px;
+  margin-top:6px
+}
 input[type=file]{margin-top:8px}
 
-.btn{padding:8px 12px;border-radius:6px;border:none;background:#1e73be;color:#fff;cursor:pointer}
+.btn{
+  padding:8px 12px;
+  border-radius:6px;
+  border:none;
+  background:#1e73be;
+  color:#fff;
+  cursor:pointer
+}
 .btn.grey{background:#777}
 #formMsg{margin-top:8px}
 </style>
@@ -86,10 +139,17 @@ input[type=file]{margin-top:8px}
 <div class="topbar">
   <h2>Купить билет</h2>
   <div class="legend">
-    <span><i class="sw" style="background:#00a000"></i> available</span>
+    <span><i class="sw" style="background:#1e5eff"></i> 20 €</span>
+    <span><i class="sw" style="background:#00a000"></i> 15 €</span>
     <span><i class="sw" style="background:#f0a000"></i> pending</span>
     <span><i class="sw" style="background:#c00000"></i> sold</span>
   </div>
+</div>
+
+<div class="prices">
+  <b>Стоимость билетов:</b><br>
+  🔵 Синие места (ряды A–E) — <b>20 €</b><br>
+  🟢 Зелёные места — <b>15 €</b>
 </div>
 
 <div class="hall" id="hall">
@@ -99,11 +159,12 @@ input[type=file]{margin-top:8px}
 <div id="modal" class="modal">
   <div class="card">
     <h3 id="modalTitle"></h3>
+
     <form id="buyForm">
       <input type="hidden" id="seatId">
 
       <label>Имя
-        <input type="text" id="firstName" name="firstName" required>
+        <input type="text" id="firstName" required>
       </label>
 
       <label>Фамилия
@@ -115,8 +176,15 @@ input[type=file]{margin-top:8px}
       </label>
 
       <label>Подтверждение оплаты
-        <input type="file" id="receipt" required accept="image/*,application/pdf">
+        <input type="file" id="receipt" required>
       </label>
+
+      <!-- 🔴 СЮДА ВПИШИ СВОИ РЕКВИЗИТЫ -->
+      <div style="margin-top:10px;background:#f6f6f6;padding:8px;border-radius:6px">
+        <b>Оплата:</b><br>
+        MBWay: XXXXXXXX<br>
+        IBAN: PT50 XXXX XXXX XXXX
+      </div>
 
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
         <button type="button" class="btn grey" id="cancelBtn">Отмена</button>
@@ -129,12 +197,11 @@ input[type=file]{margin-top:8px}
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxOb39M5bPSL8UCsxqYyGkc_iRJ4sAb-dc_kU0Vo1JNXBHi-pqipxbgyJm_FSukb803Ag/exec';
+const API_URL = 'PASTE_YOUR_SCRIPT_URL';
 
-/* 🎟 схема рядов */
+/* количество мест в рядах */
 const rowsCounts = [16,17,16,15,14,14,14,13,10,11,10,9,7,6];
 
-/* 📐 параметры */
 const hallPaddingLeft = 6;
 const hallPaddingRight = 6;
 const topStart = 22;
@@ -142,20 +209,33 @@ const rowVGap = 4.5;
 const seatW = 3.5;
 const seatH = 3.5;
 
-/* 🧮 генерация мест */
+function rowLetter(i){
+  return String.fromCharCode(65 + i); // A,B,C…
+}
+
+/* генерация мест */
 const SEATS_CONFIG = (() => {
   const arr = [];
   const width = 100 - hallPaddingLeft - hallPaddingRight;
   const maxCols = Math.max(...rowsCounts);
   const lastLeft = hallPaddingLeft + width - seatW;
-  const colGap = maxCols > 1 ? (width - seatW) / (maxCols - 1) - seatW : 0;
+  const colGap =
+    maxCols > 1 ? (width - seatW) / (maxCols - 1) - seatW : 0;
 
-  let id = 1;
   rowsCounts.forEach((count, r) => {
     const top = topStart + r * rowVGap;
     const startLeft = lastLeft - (count - 1) * (seatW + colGap);
-    for (let i = 0; i < count; i++) {
-      arr.push({ id:String(id++), left:startLeft + i*(seatW+colGap), top });
+    const row = rowLetter(r);
+
+    for(let i=0;i<count;i++){
+      arr.push({
+        id: `${row}${i+1}`,
+        row,
+        seat: i+1,
+        isVip: r < 5,
+        left: startLeft + i*(seatW+colGap),
+        top
+      });
     }
   });
   return arr;
@@ -164,12 +244,10 @@ const SEATS_CONFIG = (() => {
 let seatsState = {};
 
 async function fetchSeats(){
-  try{
-    const r = await fetch(API_URL);
-    const j = await r.json();
-    seatsState = {};
-    j.seats.forEach(s => seatsState[s.id] = s.status);
-  }catch(e){}
+  const r = await fetch(API_URL);
+  const j = await r.json();
+  seatsState = {};
+  j.seats.forEach(s => seatsState[s.id] = s.status);
   renderSeats();
 }
 
@@ -179,12 +257,17 @@ function renderSeats(){
 
   SEATS_CONFIG.forEach(s=>{
     const el = document.createElement('div');
-    el.className = 'seat ' + (seatsState[s.id] || 'available');
+    el.className =
+      'seat ' +
+      (seatsState[s.id] || 'available') +
+      ' ' +
+      (s.isVip ? 'vip' : 'regular');
+
     el.style.left = s.left + '%';
     el.style.top = s.top + '%';
     el.style.width = seatW + '%';
     el.style.height = seatH + '%';
-    el.textContent = s.id;
+    el.textContent = s.seat;
 
     if((seatsState[s.id] || 'available') === 'available'){
       el.onclick = ()=>openModal(s.id);
@@ -193,51 +276,41 @@ function renderSeats(){
   });
 }
 
-/* ===== MODAL ===== */
+/* MODAL */
 const modal = document.getElementById('modal');
-const seatIdInput = document.getElementById('seatId');
-const modalTitle = document.getElementById('modalTitle');
-const formMsg = document.getElementById('formMsg');
-
 function openModal(id){
-  seatIdInput.value = id;
-  modalTitle.textContent = 'Выбрано место ' + id;
+  document.getElementById('seatId').value = id;
+  document.getElementById('modalTitle').textContent =
+    'Вы выбрали место ' + id;
   modal.classList.add('open');
 }
-document.getElementById('cancelBtn').onclick = ()=>modal.classList.remove('open');
+document.getElementById('cancelBtn').onclick =
+  ()=>modal.classList.remove('open');
 
-/* ===== ОТПРАВКА ===== */
-document.getElementById('buyForm').onsubmit = e => {
+/* ОТПРАВКА — НЕ ТРОНУТА */
+document.getElementById('buyForm').onsubmit = async e => {
   e.preventDefault();
-  formMsg.textContent = 'Отправка…';
-
   const file = receipt.files[0];
   const reader = new FileReader();
-
   reader.onload = async () => {
     const base64 = reader.result.split(',')[1];
-
     const fd = new FormData();
     fd.append('type','reserve');
-    fd.append('id',seatIdInput.value);
-    fd.append('name',document.getElementById('firstName').value);
+    fd.append('id',seatId.value);
+    fd.append('name',firstName.value);
     fd.append('surname',surname.value);
     fd.append('email',email.value);
-    fd.append('receiptBase64', base64);
-    fd.append('receiptMime', file.type);
+    fd.append('receiptBase64',base64);
+    fd.append('receiptMime',file.type);
 
     const r = await fetch(API_URL,{method:'POST',body:fd});
     const j = await r.json();
-
+    formMsg.textContent = j.ok ? 'Резерв принят' : j.error;
     if(j.ok){
-      formMsg.textContent = 'Резерв принят';
       fetchSeats();
       setTimeout(()=>modal.classList.remove('open'),800);
-    }else{
-      formMsg.textContent = 'Ошибка: ' + j.error;
     }
   };
-
   reader.readAsDataURL(file);
 };
 
